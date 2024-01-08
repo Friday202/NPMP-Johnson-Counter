@@ -20,6 +20,16 @@ def ff_ode_model(Y, T, params):
     dq_dt     = alpha3*((pow(a/Kd, n)*pow(clk/Kd, n))/(1 + pow(a/Kd, n) + pow(clk/Kd, n) + pow(a/Kd, n)*pow(clk/Kd, n))) + alpha4*(1/(1 + pow(not_q/Kd, n))) - delta2*q  
     dnot_q_dt = alpha3*((pow(not_a/Kd, n)*pow(clk/Kd, n))/(1 + pow(not_a/Kd, n) + pow(clk/Kd, n) + pow(not_a/Kd, n)*pow(clk/Kd, n))) + alpha4*(1/(1 + pow(q/Kd, n))) - delta2*not_q   
 
+    # Check if theres nan values
+    #brez tega, temporary clock disable ni delu
+    if np.isnan(da_dt):
+        da_dt = 0
+    if np.isnan(dnot_a_dt):
+        dnot_a_dt = 0
+    if np.isnan(dq_dt):
+        dq_dt = 0
+    if np.isnan(dnot_q_dt):
+        dnot_q_dt = 0
 
     return np.array([da_dt, dnot_a_dt, dq_dt, dnot_q_dt]) 
 
@@ -95,18 +105,33 @@ def counter_model_2(Y, T, params_ff):
 
     return np.concatenate([Y1, Y2])
 
-def counter_model_3(Y, T, params_ff):
+def counter_model_3(Y, T, params_ff, clock_enabled=True, count_backwards=False):
     a1, not_a1, q1, not_q1, a2, not_a2, q2, not_q2, a3, not_a3, q3, not_q3 = Y
 
-    clk = get_clock(T)
+    # Testing temporary clock disable
+    # if T > 0 and T < 168:
+    #     clock_enabled = False
+    # else:
+    #     clock_enabled = True
 
-    d1 = not_q1
+    if clock_enabled:
+        clk = get_clock(T)
+    else:
+        clk = 0
+
+    if count_backwards:
+        # Logic for backward counting (samo drugače obrnjeni znaki)
+        d1 = not_q1
+        d2 = not_q2 if q1 < 0.5 else q2
+        d3 = not_q3 if (q1 < 0.5 and q2 < 0.5) else q3
+    else:
+        # Original forward counting logic
+        d1 = not_q1
+        d2 = not_q2 if q1 >= 0.5 else q2
+        d3 = not_q3 if (q1 >= 0.5 and q2 >= 0.5) else q3
+
     Y1 = ff_ode_model([a1, not_a1, q1, not_q1, d1, clk], T, params_ff)
-
-    d2 = not_q2 if q1 >= 0.5 else q2
     Y2 = ff_ode_model([a2, not_a2, q2, not_q2, d2, clk], T, params_ff)
-
-    d3 = not_q3 if (q1 >= 0.5 and q2 >= 0.5) else q3
     Y3 = ff_ode_model([a3, not_a3, q3, not_q3, d3, clk], T, params_ff)
 
     return np.concatenate([Y1, Y2, Y3])
