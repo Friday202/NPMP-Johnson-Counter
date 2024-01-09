@@ -66,3 +66,8 @@ def inhibition(x, i, Kd, n=1):
 # CLOCK GENERATOR 
 def get_clock(t, amp=100, per=24, phase = 0):                   
     return amp*(np.sin(2*np.pi*(t)/per + phase) + 1)/2    
+
+def modulated_clock(t, inhibitor, Kd, n, amp=100, per=24, phase=0):
+    clock_signal = get_clock(t, amp, per, phase)
+    return inhibition(clock_signal, inhibitor, Kd, n)
+

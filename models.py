@@ -92,43 +92,58 @@ def three_bit_model(Y, T, params):
 
     return dY
 
-def counter_model_2(Y, T, params_ff):
+
+def xor(in1, in2, Kd, n):
+    return hybrid(in1,in2, Kd, n, Kd, n) + hybrid(in2,in1, Kd, n, Kd, n) 
+
+def xnor(A1, A2, Kd, n):
+    # Implementing XNOR as (A AND B) OR (NOT A AND NOT B)
+    and_gate = activate_2(A1, A2, Kd, n)
+    nor_gate = repress_2(A1, A2, Kd, n)
+    return and_gate + nor_gate - and_gate * nor_gate
+
+
+def counter_model_2(Y, T, params_ff, inhibitor_value=0, set_number = 0):
     a1, not_a1, q1, not_q1, a2, not_a2, q2, not_q2 = Y
+    alpha1, alpha2, alpha3, alpha4, delta1, delta2, Kd, n = params_ff
 
-    clk = get_clock(T)
+    clk = modulated_clock(T, inhibitor_value, Kd, n)
 
-    d1 = not_q1
+    if set_number != 0 and T < 10 :
+        bin_rep = format(set_number, '02b')
+        for i in range(2):
+            func = induction if bin_rep[i] == '1' else inhibition
+            vars()[f'd{i+1}'] = alpha1 * func(vars()[f'q{i+1}'], 200, Kd, n)
+    else: 
+        d1 = not_q1
+        d2 = alpha1 * xor(q1, q2, Kd, n) 
+
     Y1 = ff_ode_model([a1, not_a1, q1, not_q1, d1, clk], T, params_ff)
-
-    d2 = not_q2 if q1 >= 0.5 else q2
     Y2 = ff_ode_model([a2, not_a2, q2, not_q2, d2, clk], T, params_ff)
 
     return np.concatenate([Y1, Y2])
 
-def counter_model_3(Y, T, params_ff, clock_enabled=True, count_backwards=False):
+
+def counter_model_3(Y, T, params_ff, inhibitor_value=0, set_number = 0):
     a1, not_a1, q1, not_q1, a2, not_a2, q2, not_q2, a3, not_a3, q3, not_q3 = Y
+    alpha1, alpha2, alpha3, alpha4, delta1, delta2, Kd, n = params_ff
 
-    # Testing temporary clock disable
-    # if T > 0 and T < 168:
-    #     clock_enabled = False
-    # else:
-    #     clock_enabled = True
+    clk = modulated_clock(T, inhibitor_value, Kd, n)
 
-    if clock_enabled:
-        clk = get_clock(T)
+    if set_number != 0 and T < 12 :
+        bin_rep = format(set_number, '03b')
+        ds = []
+        for i in range(3):
+            q = [q1, q2, q3][i]
+            alpha = alpha1  # Assuming alpha1 is used for both conditions
+            function = induction if bin_rep[i] == '1' else inhibition
+            ds.append(alpha * function(q, 200, Kd, n))
+
+        d1, d2, d3 = ds
     else:
-        clk = 0
-
-    if count_backwards:
-        # Logic for backward counting (samo drugače obrnjeni znaki)
         d1 = not_q1
-        d2 = not_q2 if q1 < 0.5 else q2
-        d3 = not_q3 if (q1 < 0.5 and q2 < 0.5) else q3
-    else:
-        # Original forward counting logic
-        d1 = not_q1
-        d2 = not_q2 if q1 >= 0.5 else q2
-        d3 = not_q3 if (q1 >= 0.5 and q2 >= 0.5) else q3
+        d2 = alpha1 * xor(q1, q2, Kd, n)
+        d3 = alpha1 * xor(alpha1 * activate_2(q1, q2, Kd, n), q3, Kd, n) 
 
     Y1 = ff_ode_model([a1, not_a1, q1, not_q1, d1, clk], T, params_ff)
     Y2 = ff_ode_model([a2, not_a2, q2, not_q2, d2, clk], T, params_ff)
