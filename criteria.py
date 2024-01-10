@@ -202,7 +202,7 @@ def fitness_function(params):
 original_params = [34.73, 49.36, 32.73, 49.54, 1.93, 0.69, 10.44, 4.35]
 
 # Set bounds close to original values
-bounds_factor = 0.4  # Adjust this factor to determine how close the bounds are to the original values
+bounds_factor = 0.6  # Adjust this factor to determine how close the bounds are to the original values
 bounds = [(param - bounds_factor * param, param + bounds_factor * param) for param in original_params]
 # bounds = [(0.1, 50), (0.1, 50), (0.1, 50), (0.1, 50), (0.001, 50), (0.001, 50), (0.01, 250), (1, 5)]
 
