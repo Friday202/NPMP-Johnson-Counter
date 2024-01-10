@@ -83,7 +83,7 @@ plt.plot(normalized_T, normalized_clk, '--', linewidth=2, label="CLK", color='bl
 plt.tight_layout()
 plt.show()
 
-print(normalized_T)
+# print(normalized_T)
 
 
 def get_ideal_response(period, T, clk, mode, threshold):
@@ -115,9 +115,12 @@ def get_ideal_response(period, T, clk, mode, threshold):
             prev_clk_value = clk[timestep]
 
     elif mode == 2:
+        # Negative edge
         for timestep in range(len(T)):
-            if clk[timestep] <= threshold and prev_clk_value > threshold:
-                current_value = 1 if current_value == 0 else 0
+            if clk[timestep] <= threshold < prev_clk_value:
+                current_value += 1
+                if current_value >= len(period):
+                    current_value = 0
 
             ideal_values.append(current_value)
             prev_clk_value = clk[timestep]
@@ -154,12 +157,16 @@ def get_ideal_response(period, T, clk, mode, threshold):
 
 
 ideal_response_q1 = get_ideal_response([0, 1], normalized_T, normalized_clk, 1, 0.01)
+ideal_response_q2 = get_ideal_response([1, 1, 0, 0], normalized_T, normalized_clk, 1, 0.01)
+ideal_response_q3 = get_ideal_response([0, 0, 1, 1, 1, 1, 0, 0], normalized_T, normalized_clk, 1, 0.01)
 
 # plotting normalized graph
 plt.plot(normalized_T, normalized_Q1, label='q1')
 plt.plot(normalized_T, ideal_response_q1, label='q1 ideal')
-# plt.plot(normalized_T, normalized_Q2, label='q2')
-# plt.plot(normalized_T, normalized_Q3, label='q3')
+plt.plot(normalized_T, normalized_Q2, label='q2')
+plt.plot(normalized_T, ideal_response_q2, label='q2 ideal')
+plt.plot(normalized_T, normalized_Q3, label='q3')
+plt.plot(normalized_T, ideal_response_q3, label='q2 ideal')
 plt.plot(normalized_T, normalized_clk, '--', linewidth=2, label="CLK", color='black', alpha=0.25)
 
 
