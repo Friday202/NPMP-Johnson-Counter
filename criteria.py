@@ -202,7 +202,7 @@ def fitness_function(params):
 original_params = [34.73, 49.36, 32.73, 49.54, 1.93, 0.69, 10.44, 4.35]
 
 # Set bounds close to original values
-bounds_factor = 0.6  # Adjust this factor to determine how close the bounds are to the original values
+bounds_factor = 0.62  # Adjust this factor to determine how close the bounds are to the original values
 bounds = [(param - bounds_factor * param, param + bounds_factor * param) for param in original_params]
 # bounds = [(0.1, 50), (0.1, 50), (0.1, 50), (0.1, 50), (0.001, 50), (0.001, 50), (0.01, 250), (1, 5)]
 
@@ -232,7 +232,7 @@ Q1_orig, Q2_orig, Q3_orig, clk_orig, T_orig = run_counter(*original_params)
 plt.plot(T_orig, Q1_orig, label='q1_orig')
 plt.plot(T_orig, Q2_orig, label='q2_orig')
 plt.plot(T_orig, Q3_orig, label='q3_orig')
-plt.plot(T_orig, clk_orig, '--', linewidth=2, label="CLK_orig", color='black', alpha=0.25)
+plt.plot(T_opt, clk_opt, '--', linewidth=2, label="CLK_opt", color='black', alpha=0.25)
 plt.legend()
 plt.show()
 
