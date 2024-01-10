@@ -20,6 +20,16 @@ def ff_ode_model(Y, T, params):
     dq_dt     = alpha3*((pow(a/Kd, n)*pow(clk/Kd, n))/(1 + pow(a/Kd, n) + pow(clk/Kd, n) + pow(a/Kd, n)*pow(clk/Kd, n))) + alpha4*(1/(1 + pow(not_q/Kd, n))) - delta2*q  
     dnot_q_dt = alpha3*((pow(not_a/Kd, n)*pow(clk/Kd, n))/(1 + pow(not_a/Kd, n) + pow(clk/Kd, n) + pow(not_a/Kd, n)*pow(clk/Kd, n))) + alpha4*(1/(1 + pow(q/Kd, n))) - delta2*not_q   
 
+    # Check if theres nan values
+    #brez tega, temporary clock disable ni delu
+    if np.isnan(da_dt):
+        da_dt = 0
+    if np.isnan(dnot_a_dt):
+        dnot_a_dt = 0
+    if np.isnan(dq_dt):
+        dq_dt = 0
+    if np.isnan(dnot_q_dt):
+        dnot_q_dt = 0
 
     return np.array([da_dt, dnot_a_dt, dq_dt, dnot_q_dt]) 
 
@@ -82,31 +92,61 @@ def three_bit_model(Y, T, params):
 
     return dY
 
-def counter_model_2(Y, T, params_ff):
+
+def xor(in1, in2, Kd, n):
+    return hybrid(in1,in2, Kd, n, Kd, n) + hybrid(in2,in1, Kd, n, Kd, n) 
+
+def xnor(A1, A2, Kd, n):
+    # Implementing XNOR as (A AND B) OR (NOT A AND NOT B)
+    and_gate = activate_2(A1, A2, Kd, n)
+    nor_gate = repress_2(A1, A2, Kd, n)
+    return and_gate + nor_gate - and_gate * nor_gate
+
+
+def counter_model_2(Y, T, params_ff, inhibitor_value=0, set_number = 0):
     a1, not_a1, q1, not_q1, a2, not_a2, q2, not_q2 = Y
+    alpha1, alpha2, alpha3, alpha4, delta1, delta2, Kd, n = params_ff
 
-    clk = get_clock(T)
+    clk = modulated_clock(T, inhibitor_value, Kd, n)
 
-    d1 = not_q1
+    if set_number != 0 and T < 10 :
+        bin_rep = format(set_number, '02b')
+        for i in range(2):
+            func = induction if bin_rep[i] == '1' else inhibition
+            vars()[f'd{i+1}'] = alpha1 * func(vars()[f'q{i+1}'], 200, Kd, n)
+    else: 
+        d1 = not_q1
+        d2 = alpha1 * xor(q1, q2, Kd, n) 
+
     Y1 = ff_ode_model([a1, not_a1, q1, not_q1, d1, clk], T, params_ff)
-
-    d2 = not_q2 if q1 >= 0.5 else q2
     Y2 = ff_ode_model([a2, not_a2, q2, not_q2, d2, clk], T, params_ff)
 
     return np.concatenate([Y1, Y2])
 
-def counter_model_3(Y, T, params_ff):
+
+def counter_model_3(Y, T, params_ff, inhibitor_value=0, set_number = 0):
     a1, not_a1, q1, not_q1, a2, not_a2, q2, not_q2, a3, not_a3, q3, not_q3 = Y
+    alpha1, alpha2, alpha3, alpha4, delta1, delta2, Kd, n = params_ff
 
-    clk = get_clock(T)
+    clk = modulated_clock(T, inhibitor_value, Kd, n)
 
-    d1 = not_q1
+    if set_number != 0 and T < 12 :
+        bin_rep = format(set_number, '03b')
+        ds = []
+        for i in range(3):
+            q = [q1, q2, q3][i]
+            alpha = alpha1  # Assuming alpha1 is used for both conditions
+            function = induction if bin_rep[i] == '1' else inhibition
+            ds.append(alpha * function(q, 200, Kd, n))
+
+        d1, d2, d3 = ds
+    else:
+        d1 = not_q1
+        d2 = alpha1 * xor(q1, q2, Kd, n)
+        d3 = alpha1 * xor(alpha1 * activate_2(q1, q2, Kd, n), q3, Kd, n) 
+
     Y1 = ff_ode_model([a1, not_a1, q1, not_q1, d1, clk], T, params_ff)
-
-    d2 = not_q2 if q1 >= 0.5 else q2
     Y2 = ff_ode_model([a2, not_a2, q2, not_q2, d2, clk], T, params_ff)
-
-    d3 = not_q3 if (q1 >= 0.5 and q2 >= 0.5) else q3
     Y3 = ff_ode_model([a3, not_a3, q3, not_q3, d3, clk], T, params_ff)
 
     return np.concatenate([Y1, Y2, Y3])
