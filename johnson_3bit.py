@@ -24,6 +24,26 @@ delta2 = 0.69 # protein_degradation
 Kd = 10.44 # Kd
 n = 4.35 # hill
 
+# 10 generations, 50 pop - genetic optimized
+# {'alpha1': 33.17535379460892, 
+# 'alpha2': 47.08900464951819,
+# 'alpha3': 32.29413516074225,
+# 'alpha4': 47.99465829689244,
+# 'delta1': 2.4434824725739523,
+# 'delta2': 2.3416351524918966,
+# 'Kd': 4.791792719700191,
+# 'n': 3.420550360325404}
+
+# 50 generations, 80 pop - genetic optimized
+# alpha1 = 35.56041696860184
+# alpha2 = 45.58394396448937 
+# alpha3 = 37.46739964697278 
+# alpha4 = 37.70026405657447
+# delta1 = 1.9270183139912507
+# delta2 = 2.2806780207649853 
+# Kd = 8.293142441550676
+# n = 3.566363109972069
+
 inhibition_rate = 200
 
 params_ff = (alpha1, alpha2, alpha3, alpha4, delta1, delta2, Kd, n)

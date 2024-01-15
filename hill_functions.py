@@ -53,14 +53,18 @@ def hybrid_AAR(A1, A2, A3, Kd_A, n_A, Kd_R=0, n_R=0):
     return activate_1(A1, Kd_A, n_A) * activate_1(A2, Kd_A, n_A) * repress_1(A3, Kd_R, n_R)
     
 def induction(x, i, Kd, n=1):
-    # Michelis-Menten equation - see Alon p. 244, equation A.2.4
-    # induction of protease by external condition / inducer - conditional jumps
-    return x*i**n/(i**n+Kd**n)   
+    # Michelis-Menten equation - using NumPy for numerical stability
+    numerator = x * np.power(i, n)
+    denominator = np.power(i, n) + np.power(Kd, n)
+    
+    return numerator / denominator 
 
-def inhibition(x, i, Kd, n=1):
-    # Michelis-Menten equation - see Alon p. 245, equation A.2.5
-    # inhibition of protease by external condition / inducer - conditional jumps
-     return x/(1+(i/Kd)**n)
+def inhibition(x, i, Kd, n):
+    if i == 0:
+        return x  # Avoid division by zero
+    else:
+        denominator = 1 + np.power(i / Kd, n)
+        return x / denominator
      
 
 # CLOCK GENERATOR 

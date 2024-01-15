@@ -13,8 +13,17 @@ RELEVANT CODE FOR NPMP
 def ff_ode_model(Y, T, params): 
     
     a, not_a, q, not_q, d, clk = Y
-    alpha1, alpha2, alpha3, alpha4, delta1, delta2, Kd, n = params
-
+    if isinstance(params, dict):
+        alpha1 = params["alpha1"]
+        alpha2 = params["alpha2"]
+        alpha3 = params["alpha3"]
+        alpha4 = params["alpha4"]
+        delta1 = params["delta1"]
+        delta2 = params["delta2"]
+        Kd = params["Kd"]
+        n = params["n"]
+    else:
+        alpha1, alpha2, alpha3, alpha4, delta1, delta2, Kd, n = params
     da_dt     = alpha1*(pow(d/Kd, n)/(1 + pow(d/Kd, n) + pow(clk/Kd, n) + pow(d/Kd, n)*pow(clk/Kd, n))) + alpha2*(1/(1 + pow(not_a/Kd, n))) - delta1 *a 
     dnot_a_dt = alpha1*(1/(1 + pow(d/Kd, n) + pow(clk/Kd, n) + pow(d/Kd, n)*pow(clk/Kd, n))) + alpha2*(1/(1 + pow(a/Kd, n))) - delta1*not_a   
     dq_dt     = alpha3*((pow(a/Kd, n)*pow(clk/Kd, n))/(1 + pow(a/Kd, n) + pow(clk/Kd, n) + pow(a/Kd, n)*pow(clk/Kd, n))) + alpha4*(1/(1 + pow(not_q/Kd, n))) - delta2*q  
@@ -126,7 +135,17 @@ def counter_model_2(Y, T, params_ff, inhibitor_value=0, set_number = 0):
 
 def counter_model_3(Y, T, params_ff, inhibitor_value=0, set_number = 0):
     a1, not_a1, q1, not_q1, a2, not_a2, q2, not_q2, a3, not_a3, q3, not_q3 = Y
-    alpha1, alpha2, alpha3, alpha4, delta1, delta2, Kd, n = params_ff
+    if isinstance(params_ff, dict):
+        alpha1 = params_ff["alpha1"]
+        alpha2 = params_ff["alpha2"]
+        alpha3 = params_ff["alpha3"]
+        alpha4 = params_ff["alpha4"]
+        delta1 = params_ff["delta1"]
+        delta2 = params_ff["delta2"]
+        Kd = params_ff["Kd"]
+        n = params_ff["n"]
+    else:
+        alpha1, alpha2, alpha3, alpha4, delta1, delta2, Kd, n = params_ff
 
     clk = modulated_clock(T, inhibitor_value, Kd, n)
 
